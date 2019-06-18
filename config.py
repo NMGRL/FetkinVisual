@@ -24,9 +24,21 @@ class Config:
     shape = None
     levels = 30
     colormap = 'hot'
-    isotherms = [100,200,300,400,500]
+    isotherms = [100, 200, 300, 400, 500]
     sample_tag = ''
-    figure_size = 10,4
+    figure_size = 10, 4
+    combine_temperature_position = True
+    combine_temperature_vectors = True
+    vector_map = None
+    vector_downsample = 1
+    vector_color = 'blue'
+    vector_every_n = 10
+    colormap_min = 0
+    colormap_max = 1000
+    use_unique_output_root = True
+
+    def __init__(self):
+        self.vector_map = {}
 
     def load(self, path):
         if not os.path.isfile(path):
@@ -42,9 +54,13 @@ class Config:
             if 'figure_size' in yd:
                 self.figure_size = [float(s) for s in yd['figure_size'].split(',')]
 
-            for attr in ('levels', 'colormap', 'isotherms', 'sample_tag'):
+            for attr in ('levels', 'colormap', 'isotherms', 'sample_tag',
+                         'combine_temperature_position',
+                         'combine_temperature_vectors',
+                         'vector_map', 'vector_color',
+                         'colormap_min', 'colormap_max', 'vector_every_n',
+                         'use_unique_output_root'):
                 if attr in yd:
                     setattr(self, attr, yd[attr])
-
 
 # ============= EOF =============================================

@@ -78,6 +78,24 @@ def extract_sample_forward(fp):
     return extract_xy(fp, idxs=[0, 1])
 
 
+def extract_vectors(vp, cfg):
+    vectors = []
+    with open(vp, 'r') as rfile:
+        for line in rfile:
+            line = line.strip()
+            line = [a.strip() for a in line.split('\t')]
+            vector = [float(a) for a in line[3:]]
+
+            x = int(vector[0])
+            y = vector[1]
+            if cfg.vector_every_n and x % cfg.vector_every_n:
+                continue
+
+            vectors.append(vector)
+
+    return array(vectors)[::cfg.vector_downsample]
+
+
 def generate_visualization(cfg):
     # get the file counters
 
@@ -99,13 +117,23 @@ def generate_visualization(cfg):
         make_temperature_plot(count, cfg, xs, ys, vs)
         make_isotherms(count, cfg, xs, ys, vs)
 
-        tp = get_file(root, count, 'topography')
-        xs, ys = extract_topography(tp)
-        make_topograph(count, cfg, xs, ys)
-
         tp = get_file(root, count, 'sample_{}'.format(cfg.sample_tag))
-        xs, ys = extract_sample_positions(tp)
-        make_sample_positions(count, cfg, xs, ys)
+        sxs, sys = extract_sample_positions(tp)
+        make_sample_positions(count, cfg, sxs, sys)
+
+        if cfg.combine_temperature_position:
+            make_combined_temperature_position(count, cfg, xs, ys, vs, sxs, sys)
+
+        # todo: plot vectors on temperature plot
+        if cfg.combine_temperature_vectors:
+            vector_name = cfg.vector_map.get(count)
+            if vector_name is not None:
+                vectors = extract_vectors(os.path.join(root, '{}.dat'.format(vector_name)), cfg)
+                make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors)
+
+        tp = get_file(root, count, 'topography')
+        txs, tys = extract_topography(tp)
+        make_topograph(count, cfg, txs, tys)
         break
 
     fp = get_file(root, cfg.sample_tag, 'sample_forward')
@@ -122,6 +150,32 @@ def prep(cfg, xs, ys, vs):
     ys = ys.reshape(cfg.shape)
     vs = vs.reshape(cfg.shape)
     return xs, ys, vs
+
+
+def make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors):
+    plt.xlabel('X Distance Along Model Space (km)')
+    plt.ylabel('Elevation (km)')
+
+    x, y, u, v = vectors.T
+    plt.contourf(xs, ys, vs, levels=cfg.levels, cmap=cfg.colormap)
+    add_colorbar(cfg)
+
+    plt.quiver(x, y, u, v, color=cfg.vector_color, width=0.002)
+
+    save(os.path.join(cfg.output_root, 'combined_temperature_vector_{}.pdf'.format(count)))
+
+
+def make_combined_temperature_position(count, cfg, xs, ys, vs, sxs, sys):
+    plt.xlabel('X Distance Along Model Space (km)')
+    plt.ylabel('Elevation (km)')
+
+    sxs, sys = zip(*sorted(zip(sxs, sys)))
+    plt.plot(sxs, sys)
+    plt.contourf(xs, ys, vs, levels=cfg.levels, cmap=cfg.colormap)
+
+    add_colorbar(cfg)
+
+    save(os.path.join(cfg.output_root, 'combined_temperature_position_{}.pdf'.format(count)))
 
 
 def make_forward(cfg, xs, ys):
@@ -164,8 +218,14 @@ def make_temperature_plot(count, cfg, xs, ys, vs):
     plt.ylabel('Elevation (km)')
     plt.title('Temperature (C)')
     plt.contourf(xs, ys, vs, levels=cfg.levels, cmap=cfg.colormap)
-    plt.colorbar()
+    add_colorbar(cfg)
     save(os.path.join(cfg.output_root, 'temperature_{}.pdf'.format(count)))
+
+
+def add_colorbar(cfg):
+    bar = plt.colorbar()
+    bar.mappable.set_clim(cfg.colormap_min, cfg.colormap_max)
+    bar.ax.invert_yaxis()
 
 
 def save(opath):

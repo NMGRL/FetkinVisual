@@ -73,8 +73,20 @@ def main():
         if args.figure_size:
             config.figure_size = [float(f) for f in args.figure_size.split(',')]
 
-        if config.output_root is None:
-            config.output_root = os.path.join(root, 'output')
+    if config.output_root is None:
+        config.output_root = os.path.join(root, 'visualizations')
+
+    # todo: don't overwrite existing output directory
+    if config.use_unique_output_root:
+        oroot = config.output_root
+        dirname = os.path.dirname(oroot)
+        base = os.path.basename(oroot)
+        counter = 0
+        while os.path.isdir(oroot):
+            oroot = os.path.join(dirname, '{}{:04d}'.format(base, counter))
+            counter += 1
+
+        config.output_root = oroot
 
     if not os.path.isdir(config.output_root):
         os.mkdir(config.output_root)
