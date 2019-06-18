@@ -26,7 +26,7 @@ class Config:
     colormap = 'hot'
     isotherms = [100, 200, 300, 400, 500]
     sample_tag = ''
-    figure_size = 10, 4
+    figure_size = None
     combine_temperature_position = True
     combine_temperature_vectors = True
     vector_map = None
@@ -36,6 +36,7 @@ class Config:
     colormap_min = 0
     colormap_max = 1000
     use_unique_output_root = True
+    vertical_exaggeration = 1
 
     def __init__(self):
         self.vector_map = {}
@@ -59,7 +60,7 @@ class Config:
                          'combine_temperature_vectors',
                          'vector_map', 'vector_color',
                          'colormap_min', 'colormap_max', 'vector_every_n',
-                         'use_unique_output_root'):
+                         'use_unique_output_root', 'vertical_exaggeration'):
                 if attr in yd:
                     setattr(self, attr, yd[attr])
 

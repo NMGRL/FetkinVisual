@@ -10,6 +10,5 @@ figure_size: 20,6
 vector_map:
   "0000": v_11
 use_unique_output_root: False
-
-#output_root: ~/Desktop/model1
+vertical_exaggeration: 1.25
 

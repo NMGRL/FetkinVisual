@@ -33,7 +33,7 @@ Developed by Jake Ross, Brandon Lutz. NMT
 
 
 def main():
-    DEBUG = os.getenv('DEBUG')
+    DEBUG = int(os.getenv('DEBUG', 0))
     config = Config()
     if DEBUG:
         root = '.'

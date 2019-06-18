@@ -105,7 +105,13 @@ def generate_visualization(cfg):
         count = name.split('_')[-1]
         counters.append(count)
 
-    plt.figure(figsize=cfg.figure_size)
+    figsize = cfg.figure_size
+    if figsize is None:
+        h, w = cfg.shape
+        figsize = (w / 10, h / 10 * cfg.vertical_exaggeration)
+
+    plt.figure(figsize=figsize)
+
     for count in counters:
         vp = get_file(root, count, 'values')
         vs = extract_values(vp)
@@ -133,6 +139,8 @@ def generate_visualization(cfg):
         tp = get_file(root, count, 'topography')
         txs, tys = extract_topography(tp)
         make_topograph(count, cfg, txs, tys)
+        if int(os.getenv('DEBUG', 0)):
+            break
 
     fp = get_file(root, cfg.sample_tag, 'sample_forward')
     xs, ys = extract_sample_forward(fp)
@@ -221,12 +229,14 @@ def make_temperature_plot(count, cfg, xs, ys, vs):
 
 
 def add_colorbar(cfg):
-    bar = plt.colorbar()
+    bar = plt.colorbar(pad=0.01)
     bar.mappable.set_clim(cfg.colormap_min, cfg.colormap_max)
     bar.ax.invert_yaxis()
+    bar.set_label('Temperature (C)')
 
 
 def save(opath):
+    plt.tight_layout()
     pp = PdfPages(opath)
     pp.savefig()
     pp.close()
