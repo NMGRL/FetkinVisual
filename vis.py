@@ -58,10 +58,9 @@ def main():
             # look for config file in root
             p = os.path.join(root, 'config.yaml')
             if os.path.isfile(p):
-                if input('Config file found in directory. Would you like to use it? [y]/n>>').lower() == ['', 'y',
-                                                                                                          '\n']:
+                if input('Config file found in directory. Would you like to use it? [y]/n>>').lower() in ['', 'y',
+                                                                                                          '\n', '\r\n', '\r']:
                     config_file = p
-
     if config_file:
         config.load(config_file)
     else:
