@@ -26,6 +26,7 @@ class Config:
     colormap = 'hot'
     isotherms = [100,200,300,400,500]
     sample_tag = ''
+    figure_size = 10,4
 
     def load(self, path):
         if not os.path.isfile(path):
@@ -37,6 +38,9 @@ class Config:
 
             if 'shape' in yd:
                 self.shape = [int(s) for s in yd['shape'].split(',')]
+
+            if 'figure_size' in yd:
+                self.figure_size = [float(s) for s in yd['figure_size'].split(',')]
 
             for attr in ('levels', 'colormap', 'isotherms', 'sample_tag'):
                 if attr in yd:

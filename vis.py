@@ -65,9 +65,13 @@ def main():
     if config_file:
         config.load(config_file)
     else:
-        config.shape = args.shape
+        if args.shape:
+            config.shape = [int(s) for s in args.shape.split(',')]
+
         config.levels = args.levels
         config.sample_tag = args.sample_tag
+        if args.figure_size:
+            config.figure_size = [float(f) for f in args.figure_size.split(',')]
 
         if config.output_root is None:
             config.output_root = os.path.join(root, 'output')

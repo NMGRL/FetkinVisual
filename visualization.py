@@ -88,6 +88,7 @@ def generate_visualization(cfg):
         count = name.split('_')[-1]
         counters.append(count)
 
+    plt.figure(figsize=cfg.figure_size)
     for count in counters:
         vp = get_file(root, count, 'values')
         vs = extract_values(vp)

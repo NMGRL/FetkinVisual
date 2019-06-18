@@ -9,3 +9,4 @@ levels:
   - 800
 colormap: hot
 sample_tag: MuscAr
+figure_size: 10,6
