@@ -16,34 +16,65 @@
 import os
 
 from argparser import parser
+from config import Config
+from visualization import generate_visualization
 
 
 def welcome():
     print('''    
- _______  _______  _______  ___   _  ___   __    _  __   __  ___   _______  __   __  _______  ___     
-|       ||       ||       ||   | | ||   | |  |  | ||  | |  ||   | |       ||  | |  ||   _   ||   |    
-|    ___||    ___||_     _||   |_| ||   | |   |_| ||  |_|  ||   | |  _____||  | |  ||  |_|  ||   |    
-|   |___ |   |___   |   |  |      _||   | |       ||       ||   | | |_____ |  |_|  ||       ||   |    
-|    ___||    ___|  |   |  |     |_ |   | |  _    ||       ||   | |_____  ||       ||       ||   |___ 
-|   |    |   |___   |   |  |    _  ||   | | | |   | |     | |   |  _____| ||       ||   _   ||       |
-|___|    |_______|  |___|  |___| |_||___| |_|  |__|  |___|  |___| |_______||_______||__| |__||_______|
-
-
+  ___    _   _  ___   __   ___              _ 
+ | __|__| |_| |/ (_)_ \ \ / (_)____  _ __ _| |
+ | _/ -_)  _| ' <| | ' \ V /| (_-< || / _` | |
+ |_|\___|\__|_|\_\_|_||_\_/ |_/__/\_,_\__,_|_|
+                                              
 Developed by Jake Ross, Brandon Lutz. NMT
 
 ''')
 
+
 def main():
-    args = parser.parse_args()
+    DEBUG = os.getenv('DEBUG')
+    config = Config()
+    if DEBUG:
+        root = '.'
+        config.output_root = '/Users/ross/Sandbox/fetkin2'
+    else:
+        args = parser.parse_args()
+        welcome()
+        root = args.root
 
-    welcome()
-
-    root = args.root
     if root == '.':
         root = os.getcwd()
         print('Using directory={}'.format(root))
+        if DEBUG:
+            root = os.path.join(root, 'data', 'MuscAr_grad27')
 
+    config.root = root
+    if DEBUG:
+        config_file = 'config.yaml'
+    else:
+        config_file = args.config
+        if not config_file:
+            # look for config file in root
+            p = os.path.join(root, 'config.yaml')
+            if os.path.isfile(p):
+                if input('Config file found in directory. Would you like to use it? [y]/n>>').lower() == ['', 'y',
+                                                                                                          '\n']:
+                    config_file = p
 
+    if config_file:
+        config.load(config_file)
+    else:
+        config.shape = args.shape
+        config.levels = args.levels
+
+        if config.output_root is None:
+            config.output_root = os.path.join(root, 'output')
+
+    if not os.path.isdir(config.output_root):
+        os.mkdir(config.output_root)
+
+    generate_visualization(config)
 
 
 if __name__ == '__main__':
