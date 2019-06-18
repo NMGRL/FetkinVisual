@@ -21,14 +21,22 @@ import matplotlib.pyplot as plt
 from numpy import meshgrid, array
 
 
-def list_files(root, tag):
-    name = os.path.basename(root)
-    pathname = os.path.join(root, '{}_{}_*.txt'.format(name, tag))
+def list_files(cfg, tag):
+    prefix = cfg.prefix
+    root = cfg.root
+    if not prefix:
+	    prefix = os.path.basename(root)
+    
+    pathname = os.path.join(root, '{}_{}_*.txt'.format(prefix, tag))
     return sorted(glob.glob(pathname))
 
 
-def get_file(root, count, tag):
-    name = '{}_{}_{}.txt'.format(os.path.basename(root), tag, count)
+def get_file(cfg, count, tag):
+    prefix = cfg.prefix
+    root = cfg.root
+    if not prefix:
+        prefix = os.path.basename(root)
+    name = '{}_{}_{}.txt'.format(prefix, tag, count)
     return os.path.join(root, name)
 
 
@@ -100,7 +108,7 @@ def generate_visualization(cfg):
 
     root = cfg.root
     counters = []
-    for p in list_files(root, 'values'):
+    for p in list_files(cfg, 'values'):
         name = os.path.basename(p).split('.')[0]
         count = name.split('_')[-1]
         counters.append(count)
@@ -113,16 +121,16 @@ def generate_visualization(cfg):
     plt.figure(figsize=figsize)
 
     for count in counters:
-        vp = get_file(root, count, 'values')
+        vp = get_file(cfg, count, 'values')
         vs = extract_values(vp)
-        np = get_file(root, count, 'nodes')
+        np = get_file(cfg, count, 'nodes')
         xs, ys = extract_nodes(np)
 
         xs, ys, vs = prep(cfg, xs, ys, vs)
         make_temperature_plot(count, cfg, xs, ys, vs)
         make_isotherms(count, cfg, xs, ys, vs)
 
-        tp = get_file(root, count, 'sample_{}'.format(cfg.sample_tag))
+        tp = get_file(cfg, count, 'sample_{}'.format(cfg.sample_tag))
         sxs, sys = extract_sample_positions(tp)
         make_sample_positions(count, cfg, sxs, sys)
 
@@ -136,13 +144,13 @@ def generate_visualization(cfg):
                 vectors = extract_vectors(os.path.join(root, '{}.dat'.format(vector_name)), cfg)
                 make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors)
 
-        tp = get_file(root, count, 'topography')
+        tp = get_file(cfg, count, 'topography')
         txs, tys = extract_topography(tp)
         make_topograph(count, cfg, txs, tys)
         if int(os.getenv('DEBUG', 0)):
             break
 
-    fp = get_file(root, cfg.sample_tag, 'sample_forward')
+    fp = get_file(cfg, cfg.sample_tag, 'sample_forward')
     xs, ys = extract_sample_forward(fp)
     make_forward(cfg, xs, ys)
 

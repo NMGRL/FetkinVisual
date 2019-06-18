@@ -37,7 +37,7 @@ class Config:
     colormap_max = 1000
     use_unique_output_root = True
     vertical_exaggeration = 1
-
+    prefix = None
     def __init__(self):
         self.vector_map = {}
 
@@ -60,7 +60,7 @@ class Config:
                          'combine_temperature_vectors',
                          'vector_map', 'vector_color',
                          'colormap_min', 'colormap_max', 'vector_every_n',
-                         'use_unique_output_root', 'vertical_exaggeration'):
+                         'use_unique_output_root', 'vertical_exaggeration', 'prefix'):
                 if attr in yd:
                     setattr(self, attr, yd[attr])
 
