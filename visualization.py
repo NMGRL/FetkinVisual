@@ -24,7 +24,6 @@ from numpy import meshgrid, array
 def list_files(root, tag):
     name = os.path.basename(root)
     pathname = os.path.join(root, '{}_{}_*.txt'.format(name, tag))
-    print('pathname={}'.format(pathname))
     return sorted(glob.glob(pathname))
 
 
@@ -134,7 +133,6 @@ def generate_visualization(cfg):
         tp = get_file(root, count, 'topography')
         txs, tys = extract_topography(tp)
         make_topograph(count, cfg, txs, tys)
-        break
 
     fp = get_file(root, cfg.sample_tag, 'sample_forward')
     xs, ys = extract_sample_forward(fp)

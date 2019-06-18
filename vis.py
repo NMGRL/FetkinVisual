@@ -76,7 +76,6 @@ def main():
     if config.output_root is None:
         config.output_root = os.path.join(root, 'visualizations')
 
-    # todo: don't overwrite existing output directory
     if config.use_unique_output_root:
         oroot = config.output_root
         dirname = os.path.dirname(oroot)
