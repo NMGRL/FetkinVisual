@@ -13,94 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ===============================================================================
-import glob
 import os
-
-from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
-from numpy import meshgrid, array
-
-
-def list_files(cfg, tag):
-    prefix = cfg.prefix
-    root = cfg.root
-    if not prefix:
-	    prefix = os.path.basename(root)
-    
-    pathname = os.path.join(root, '{}_{}_*.txt'.format(prefix, tag))
-    return sorted(glob.glob(pathname))
-
-
-def get_file(cfg, count, tag):
-    prefix = cfg.prefix
-    root = cfg.root
-    if not prefix:
-        prefix = os.path.basename(root)
-    name = '{}_{}_{}.txt'.format(prefix, tag, count)
-    return os.path.join(root, name)
-
-
-def extract_values(p):
-    vs = []
-    with open(p, 'r') as rfile:
-        for line in rfile:
-            vs.append(float(line.strip()))
-    return array(vs)
-
-
-def extract_xy(np, skip=0, idxs=None):
-    delimiter = ' '
-    xs, ys = [], []
-    if idxs is None:
-        idxs = [0, -1]
-
-    with open(np, 'r') as rfile:
-        for i in range(skip):
-            next(rfile)
-
-        for line in rfile:
-            line = line.strip()
-            args = line.split(delimiter)
-            args = [a for a in args if a != '']
-
-            xs.append(float(args[idxs[0]]))
-            ys.append(float(args[idxs[1]]))
-
-    return array(xs), array(ys)
-
-
-def extract_topography(tp):
-    return extract_xy(tp, skip=1)
-
-
-def extract_nodes(np):
-    return extract_xy(np)
-
-
-def extract_sample_positions(sp):
-    return extract_xy(sp, idxs=[0, 1])
-
-
-def extract_sample_forward(fp):
-    return extract_xy(fp, idxs=[0, 1])
-
-
-def extract_vectors(vp, cfg):
-    vectors = []
-    with open(vp, 'r') as rfile:
-        for line in rfile:
-            line = line.strip()
-            line = [a.strip() for a in line.split('\t')]
-            vector = [float(a) for a in line[3:]]
-
-            x = int(vector[0])
-            y = vector[1]
-            if cfg.vector_every_n and x % cfg.vector_every_n:
-                continue
-
-            vectors.append(vector)
-
-    return array(vectors)[::cfg.vector_downsample]
+from extract import extract_values, extract_nodes, extract_sample_positions, extract_vectors, extract_topography, \
+    extract_sample_forward
+from message import warning
+from pathutil import list_files, get_file
+from plotting import make_temperature_plot, make_isotherms, make_sample_positions, make_combined_temperature_position, \
+    make_combined_temperature_vector, make_topography, make_forward
 
 
 def generate_visualization(cfg):
@@ -121,133 +41,69 @@ def generate_visualization(cfg):
     plt.figure(figsize=figsize)
 
     for count in counters:
+        print('Time step: {}'.format(count))
         vp = get_file(cfg, count, 'values')
-        vs = extract_values(vp)
-        np = get_file(cfg, count, 'nodes')
-        xs, ys = extract_nodes(np)
+        hastemp = False
+        if vp:
+            vs = extract_values(vp)
 
-        xs, ys, vs = prep(cfg, xs, ys, vs)
-        make_temperature_plot(count, cfg, xs, ys, vs)
-        make_isotherms(count, cfg, xs, ys, vs)
+            np = get_file(cfg, count, 'nodes')
+            if np:
+                xs, ys = extract_nodes(np)
 
+                xs = xs.reshape(cfg.shape)
+                ys = ys.reshape(cfg.shape)
+                vs = vs.reshape(cfg.shape)
+
+                hastemp = True
+
+        if hastemp:
+            make_temperature_plot(count, cfg, xs, ys, vs)
+            make_isotherms(count, cfg, xs, ys, vs)
+        else:
+            warning('No Temperature data')
+
+        hasposition = False
         tp = get_file(cfg, count, 'sample_{}'.format(cfg.sample_tag))
-        sxs, sys = extract_sample_positions(tp)
-        make_sample_positions(count, cfg, sxs, sys)
+        if tp:
+            sxs, sys = extract_sample_positions(tp)
+            make_sample_positions(count, cfg, sxs, sys)
+            hasposition = True
 
-        if cfg.combine_temperature_position:
-            make_combined_temperature_position(count, cfg, xs, ys, vs, sxs, sys)
+        if hasposition:
+            if cfg.combine_temperature_position:
+                make_combined_temperature_position(count, cfg, xs, ys, vs, sxs, sys)
+        else:
+            warning('No Sample Position data')
 
-        # todo: plot vectors on temperature plot
-        if cfg.combine_temperature_vectors:
-            vector_name = cfg.vector_map.get(count)
-            if vector_name is not None:
-                vectors = extract_vectors(os.path.join(root, '{}.dat'.format(vector_name)), cfg)
-                make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors)
+        if hastemp:
+            if cfg.combine_temperature_vectors:
+                vector_name = cfg.vector_map.get(count)
+                if vector_name is not None:
+                    vp = os.path.join(root, '{}.dat'.format(vector_name))
+                    if os.path.isfile(vp):
+                        vectors = extract_vectors(vp, cfg)
+                        make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors)
+                    else:
+                        print('Does not exist: "{}"'.format(vp))
+                        warning('No vector file for {} - {}'.format(count, vector_name))
 
         tp = get_file(cfg, count, 'topography')
-        txs, tys = extract_topography(tp)
-        make_topograph(count, cfg, txs, tys)
+        if tp:
+            txs, tys = extract_topography(tp)
+            make_topography(count, cfg, txs, tys)
+        else:
+            warning('No Topography data')
+
         if int(os.getenv('DEBUG', 0)):
             break
 
     fp = get_file(cfg, cfg.sample_tag, 'sample_forward')
-    xs, ys = extract_sample_forward(fp)
-    make_forward(cfg, xs, ys)
+    if fp:
+        xs, ys = extract_sample_forward(fp)
+        make_forward(cfg, xs, ys)
+    else:
+        warning('No sample forward data')
 
-
-def prep(cfg, xs, ys, vs):
-    xs = array(xs)
-    ys = array(ys)
-    vs = array(vs)
-
-    xs = xs.reshape(cfg.shape)
-    ys = ys.reshape(cfg.shape)
-    vs = vs.reshape(cfg.shape)
-    return xs, ys, vs
-
-
-def make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors):
-    plt.xlabel('X Distance Along Model Space (km)')
-    plt.ylabel('Elevation (km)')
-
-    x, y, u, v = vectors.T
-    plt.contourf(xs, ys, vs, levels=cfg.levels, cmap=cfg.colormap)
-    add_colorbar(cfg)
-
-    plt.quiver(x, y, u, v, color=cfg.vector_color, width=0.002)
-
-    save(os.path.join(cfg.output_root, 'combined_temperature_vector_{}.pdf'.format(count)))
-
-
-def make_combined_temperature_position(count, cfg, xs, ys, vs, sxs, sys):
-    plt.xlabel('X Distance Along Model Space (km)')
-    plt.ylabel('Elevation (km)')
-
-    sxs, sys = zip(*sorted(zip(sxs, sys)))
-    plt.plot(sxs, sys)
-    plt.contourf(xs, ys, vs, levels=cfg.levels, cmap=cfg.colormap)
-
-    add_colorbar(cfg)
-
-    save(os.path.join(cfg.output_root, 'combined_temperature_position_{}.pdf'.format(count)))
-
-
-def make_forward(cfg, xs, ys):
-    plt.xlabel('X Distance Along Model Space (km)')
-    plt.ylabel('Age (Ma)')
-    plt.title('Sample Forward')
-
-    plt.plot(xs, ys)
-    save(os.path.join(cfg.output_root, 'sample_forward.pdf'))
-
-
-def make_sample_positions(count, cfg, xs, ys):
-    plt.xlabel('X Distance Along Model Space (km)')
-    plt.ylabel('Elevation (km)')
-    plt.title('Sample Position')
-
-    xs, ys = zip(*sorted(zip(xs, ys)))
-    plt.plot(xs, ys)
-    save(os.path.join(cfg.output_root, 'sample_position_{}.pdf'.format(count)))
-
-
-def make_topograph(count, cfg, xs, ys):
-    plt.xlabel('X Distance Along Model Space (km)')
-    plt.ylabel('Elevation (km)')
-    plt.title('Topography')
-    plt.plot(xs, ys)
-    save(os.path.join(cfg.output_root, 'topography_{}.pdf'.format(count)))
-
-
-def make_isotherms(count, cfg, xs, ys, vs):
-    plt.xlabel('X Distance Along Model Space (km)')
-    plt.ylabel('Elevation (km)')
-    plt.title('Isotherms (C)')
-    plt.contour(xs, ys, vs, levels=cfg.isotherms, colors='red')
-    save(os.path.join(cfg.output_root, 'isotherms_{}.pdf'.format(count)))
-
-
-def make_temperature_plot(count, cfg, xs, ys, vs):
-    plt.xlabel('X Distance Along Model Space (km)')
-    plt.ylabel('Elevation (km)')
-    plt.title('Temperature (C)')
-    plt.contourf(xs, ys, vs, levels=cfg.levels, cmap=cfg.colormap)
-    add_colorbar(cfg)
-    save(os.path.join(cfg.output_root, 'temperature_{}.pdf'.format(count)))
-
-
-def add_colorbar(cfg):
-    bar = plt.colorbar(pad=0.01)
-    bar.mappable.set_clim(cfg.colormap_min, cfg.colormap_max)
-    bar.ax.invert_yaxis()
-    bar.set_label('Temperature (C)')
-
-
-def save(opath):
-    plt.tight_layout()
-    pp = PdfPages(opath)
-    pp.savefig()
-    pp.close()
-    plt.clf()
 
 # ============= EOF =============================================

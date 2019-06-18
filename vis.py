@@ -14,9 +14,10 @@
 # limitations under the License.
 # ===============================================================================
 import os
+import sys
 
-from argparser import parser
 from config import Config
+from message import warning
 from visualization import generate_visualization
 
 
@@ -27,7 +28,7 @@ def welcome():
  | _/ -_)  _| ' <| | ' \ V /| (_-< || / _` | |
  |_|\___|\__|_|\_\_|_||_\_/ |_/__/\_,_\__,_|_|
                                               
-Developed by Jake Ross, Brandon Lutz. NMT
+Developed by Jake Ross, Brandon Lutz. NMT 2019
 
 ''')
 
@@ -39,6 +40,9 @@ def main():
         root = '.'
         config.output_root = '/Users/ross/Sandbox/fetkin2'
     else:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument('root', metavar='root')
         args = parser.parse_args()
         welcome()
         root = args.root
@@ -58,19 +62,15 @@ def main():
             # look for config file in root
             p = os.path.join(root, 'config.yaml')
             if os.path.isfile(p):
-                if input('Config file found in directory. Would you like to use it? [y]/n>>').lower() in ['', 'y',
-                                                                                                          '\n', '\r\n', '\r']:
+                if input('Config file found in directory. '
+                         'Would you like to use it? [y]/n>>').lower() in ['', 'y', '\n', '\r\n', '\r']:
                     config_file = p
-    if config_file:
+
+    if config_file and os.path.isfile(config_file):
         config.load(config_file)
     else:
-        if args.shape:
-            config.shape = [int(s) for s in args.shape.split(',')]
-
-        config.levels = args.levels
-        config.sample_tag = args.sample_tag
-        if args.figure_size:
-            config.figure_size = [float(f) for f in args.figure_size.split(',')]
+        warning('Could not locate a config file')
+        sys.exit(1)
 
     if config.output_root is None:
         config.output_root = os.path.join(root, 'visualizations')

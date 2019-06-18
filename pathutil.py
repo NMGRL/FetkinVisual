@@ -13,13 +13,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ===============================================================================
-import argparse
+import glob
+import os
 
-parser = argparse.ArgumentParser()
-parser.add_argument('root', metavar='root')
-parser.add_argument('--shape')
-parser.add_argument('--levels')
-parser.add_argument('--config')
-parser.add_argument('--sample-tag')
-parser.add_argument('--figure-size')
+
+def list_files(cfg, tag):
+    root, prefix = get_root_prefix(cfg)
+    pathname = os.path.join(root, '{}_{}_*.txt'.format(prefix, tag))
+    return sorted(glob.glob(pathname))
+
+
+def get_root_prefix(cfg):
+    prefix = cfg.prefix
+    root = cfg.root
+    if not prefix:
+        prefix = os.path.basename(root)
+    return root, prefix
+
+
+def get_file(cfg, count, tag):
+    root, prefix = get_root_prefix(cfg)
+    name = '{}_{}_{}.txt'.format(prefix, tag, count)
+    p = os.path.join(root, name)
+    if os.path.isfile(p):
+        return p
+    else:
+        print('Does not exist: "{}"'.format(p))
 # ============= EOF =============================================

@@ -38,6 +38,7 @@ class Config:
     use_unique_output_root = True
     vertical_exaggeration = 1
     prefix = None
+
     def __init__(self):
         self.vector_map = {}
 
