@@ -3,3 +3,9 @@ isotherms:
   - 100
   - 200
   - 800
+levels:
+  - 100
+  - 200
+  - 800
+colormap: hot
+sample_tag: MuscAr

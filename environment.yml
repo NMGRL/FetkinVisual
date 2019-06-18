@@ -1,0 +1,10 @@
+name: FetkinVisual
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - matplotlib
+  - yaml
+  - pyyaml
+

@@ -41,9 +41,11 @@ def extract_values(p):
     return array(vs)
 
 
-def extract_xy(np, skip=0):
+def extract_xy(np, skip=0, idxs=None):
     delimiter = ' '
     xs, ys = [], []
+    if idxs is None:
+        idxs = [0, -1]
 
     with open(np, 'r') as rfile:
         for i in range(skip):
@@ -52,8 +54,10 @@ def extract_xy(np, skip=0):
         for line in rfile:
             line = line.strip()
             args = line.split(delimiter)
-            xs.append(float(args[0]))
-            ys.append(float(args[-1]))
+            args = [a for a in args if a != '']
+
+            xs.append(float(args[idxs[0]]))
+            ys.append(float(args[idxs[1]]))
 
     return array(xs), array(ys)
 
@@ -64,6 +68,14 @@ def extract_topography(tp):
 
 def extract_nodes(np):
     return extract_xy(np)
+
+
+def extract_sample_positions(sp):
+    return extract_xy(sp, idxs=[0, 1])
+
+
+def extract_sample_forward(fp):
+    return extract_xy(fp, idxs=[0, 1])
 
 
 def generate_visualization(cfg):
@@ -82,17 +94,25 @@ def generate_visualization(cfg):
         np = get_file(root, count, 'nodes')
         xs, ys = extract_nodes(np)
 
-        xs, ys, vs = prep(xs, ys, vs, cfg)
-        make_temperature_plot(count, xs, ys, vs, cfg)
-        make_isotherms(count, xs, ys, vs, cfg)
+        xs, ys, vs = prep(cfg, xs, ys, vs)
+        make_temperature_plot(count, cfg, xs, ys, vs)
+        make_isotherms(count, cfg, xs, ys, vs)
 
         tp = get_file(root, count, 'topography')
         xs, ys = extract_topography(tp)
-        make_topograph(count, xs, ys, cfg)
+        make_topograph(count, cfg, xs, ys)
+
+        tp = get_file(root, count, 'sample_{}'.format(cfg.sample_tag))
+        xs, ys = extract_sample_positions(tp)
+        make_sample_positions(count, cfg, xs, ys)
         break
 
+    fp = get_file(root, cfg.sample_tag, 'sample_forward')
+    xs, ys = extract_sample_forward(fp)
+    make_forward(cfg, xs, ys)
 
-def prep(xs, ys, vs, cfg):
+
+def prep(cfg, xs, ys, vs):
     xs = array(xs)
     ys = array(ys)
     vs = array(vs)
@@ -103,7 +123,26 @@ def prep(xs, ys, vs, cfg):
     return xs, ys, vs
 
 
-def make_topograph(count, xs, ys, cfg):
+def make_forward(cfg, xs, ys):
+    plt.xlabel('X Distance Along Model Space (km)')
+    plt.ylabel('Age (Ma)')
+    plt.title('Sample Forward')
+
+    plt.plot(xs, ys)
+    save(os.path.join(cfg.output_root, 'sample_forward.pdf'))
+
+
+def make_sample_positions(count, cfg, xs, ys):
+    plt.xlabel('X Distance Along Model Space (km)')
+    plt.ylabel('Elevation (km)')
+    plt.title('Sample Position')
+
+    xs, ys = zip(*sorted(zip(xs, ys)))
+    plt.plot(xs, ys)
+    save(os.path.join(cfg.output_root, 'sample_position_{}.pdf'.format(count)))
+
+
+def make_topograph(count, cfg, xs, ys):
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Topography')
@@ -111,7 +150,7 @@ def make_topograph(count, xs, ys, cfg):
     save(os.path.join(cfg.output_root, 'topography_{}.pdf'.format(count)))
 
 
-def make_isotherms(count, xs, ys, vs, cfg):
+def make_isotherms(count, cfg, xs, ys, vs):
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Isotherms (C)')
@@ -119,7 +158,7 @@ def make_isotherms(count, xs, ys, vs, cfg):
     save(os.path.join(cfg.output_root, 'isotherms_{}.pdf'.format(count)))
 
 
-def make_temperature_plot(count, xs, ys, vs, cfg):
+def make_temperature_plot(count, cfg, xs, ys, vs):
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Temperature (C)')

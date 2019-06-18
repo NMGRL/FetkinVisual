@@ -20,4 +20,5 @@ parser.add_argument('root', metavar='root')
 parser.add_argument('--shape')
 parser.add_argument('--levels')
 parser.add_argument('--config')
+parser.add_argument('--sample-tag')
 # ============= EOF =============================================

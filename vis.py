@@ -67,6 +67,7 @@ def main():
     else:
         config.shape = args.shape
         config.levels = args.levels
+        config.sample_tag = args.sample_tag
 
         if config.output_root is None:
             config.output_root = os.path.join(root, 'output')
