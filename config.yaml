@@ -18,3 +18,4 @@ colormap_min: 0
 colormap_max: 1000
 combine_temperature_position: True
 combine_temperature_vectors: True
+label_isotherms: True

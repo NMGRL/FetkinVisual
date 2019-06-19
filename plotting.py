@@ -89,7 +89,10 @@ def make_isotherms(count, cfg, xs, ys, vs):
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Isotherms (C)')
-    plt.contour(xs, ys, vs, levels=cfg.isotherms, colors='red')
+    ax = plt.contour(xs, ys, vs, levels=cfg.isotherms, colors='red')
+    if cfg.label_isotherms:
+        plt.clabel(ax, fmt='%0.0f (C)')
+
     save(os.path.join(cfg.output_root, 'isotherms_{}.pdf'.format(count)))
 
 

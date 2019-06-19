@@ -18,7 +18,7 @@ import sys
 import yaml
 
 
-class Config:
+class Config(object):
     root = None
     output_root = None
     shape = None
@@ -38,9 +38,11 @@ class Config:
     use_unique_output_root = True
     vertical_exaggeration = 1
     prefix = None
+    label_isotherms = True
 
     def __init__(self):
         self.vector_map = {}
+        self._dict = {}
 
     def load(self, path):
         if not os.path.isfile(path):
@@ -49,20 +51,22 @@ class Config:
 
         with open(path, 'r') as rfile:
             yd = yaml.full_load(rfile)
-
             if 'shape' in yd:
                 self.shape = [int(s) for s in yd['shape'].split(',')]
 
             if 'figure_size' in yd:
                 self.figure_size = [float(s) for s in yd['figure_size'].split(',')]
 
-            for attr in ('levels', 'colormap', 'isotherms', 'sample_tag',
-                         'combine_temperature_position',
-                         'combine_temperature_vectors',
-                         'vector_map', 'vector_color',
-                         'colormap_min', 'colormap_max', 'vector_every_n',
-                         'use_unique_output_root', 'vertical_exaggeration', 'prefix'):
-                if attr in yd:
-                    setattr(self, attr, yd[attr])
+        self._dict = yd
+
+    def __getattribute__(self, item):
+
+        d = object.__getattribute__(self, '_dict')
+        if item in d and item not in ('figure_size', 'shape'):
+            r = d.get(item)
+        else:
+            r = object.__getattribute__(self, item)
+
+        return r
 
 # ============= EOF =============================================
