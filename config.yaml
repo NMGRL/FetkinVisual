@@ -5,7 +5,7 @@ isotherms:
   - 800
 levels: 20
 colormap: hot
-sample_tag: MuscAr
+sample_tag: Zhe
 figure_size: 20,6 #supercedes vertical_exaggeration
 vector_map:
   "0000": v_11
@@ -19,3 +19,12 @@ colormap_max: 1000
 combine_temperature_position: True
 combine_temperature_vectors: True
 label_isotherms: True
+font_size: 12
+prefix: ZHe_800b
+ch:
+  range: 08-12
+  tag: ZHe
+  colormap: RdYlBu
+  legend_location: lower right
+  title: <Replace Me>
+  bgcolor: lightgrey
