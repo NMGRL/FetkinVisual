@@ -49,7 +49,7 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument('command')
         parser.add_argument('root', metavar='root')
-        parser.add_argument('config', metavar='config')
+        parser.add_argument('--config', metavar='config')
         args = parser.parse_args()
         welcome()
         root = args.root
