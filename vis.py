@@ -98,9 +98,9 @@ def main():
 
     try:
         COMMANDS[args.command](config)
-    except KeyError:
+    except KeyError as e:
         warning('invalid command={}. valid COMMANDS={}'.format(args.command, COMMANDS.keys()))
-
+        warning(e)
 
 if __name__ == '__main__':
     main()

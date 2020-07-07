@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import os
 
 from matplotlib.backends.backend_pdf import PdfPages
+from numpy import arange
 
 from message import log
 
@@ -152,14 +153,40 @@ def make_coolhistory(config, tis, tes, color, label):
 
 def format_coolhistory(config):
     ax = plt.gca()
-    if config.ch.get('invert_x'):
-        ax.invert_xaxis()
+    ch = config.ch
 
-    ax.set_facecolor(config.ch.get('bgcolor', 'lightgrey'))
+    xr = ch['xrange']
+    yr = ch['yrange']
+
+    xmi, xma = xr['min'], xr['max']
+    ymi, yma = yr['min'], yr['max']
+
+    plt.xlim(xmi, xma)
+    plt.ylim(ymi, yma)
+
+    for a in ('x', 'y'):
+        try:
+            if ch['grid'][a]:
+                plt.grid(axis=a)
+        except KeyError:
+            pass
+
+    for i, lims, axis in ((xr['interval'], ax.get_xlim, ax.xaxis),
+                          (yr['interval'], ax.get_ylim, ax.yaxis)):
+        try:
+            if i:
+                start, end = lims()
+                if start > end:
+                    start, end = end, start
+                axis.set_ticks(arange(start, end + i, i))
+        except KeyError:
+            pass
+
+    ax.set_facecolor(ch.get('bgcolor', 'lightgrey'))
     plt.xlabel('Time (Ma)')
     plt.ylabel('Temperature (C)')
-    plt.title(config.ch['title'])
-    plt.legend(loc=config.ch['legend_location'])
+    plt.title(ch['title'])
+    plt.legend(loc=ch['legend_location'])
 
 
 def make_line_color_mapper(cmap, start, end):

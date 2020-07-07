@@ -28,4 +28,14 @@ ch:
   legend_location: lower left
   title: <Replace Me>
   bgcolor: lightgrey
-  invert_x: True
+  xrange:
+    min: 50
+    max: 0
+    interval: 5
+  yrange:
+    min: 0
+    max: 400
+    interval: 20
+  grid:
+    x: true
+    y: true
