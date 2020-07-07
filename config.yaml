@@ -25,6 +25,7 @@ ch:
   range: 08-12
   tag: ZHe
   colormap: RdYlBu
-  legend_location: lower right
+  legend_location: lower left
   title: <Replace Me>
   bgcolor: lightgrey
+  invert_x: True

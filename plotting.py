@@ -152,7 +152,10 @@ def make_coolhistory(config, tis, tes, color, label):
 
 def format_coolhistory(config):
     ax = plt.gca()
-    ax.set_facecolor(config.ch['bgcolor'])
+    if config.ch.get('invert_x'):
+        ax.invert_xaxis()
+
+    ax.set_facecolor(config.ch.get('bgcolor', 'lightgrey'))
     plt.xlabel('Time (Ma)')
     plt.ylabel('Temperature (C)')
     plt.title(config.ch['title'])
