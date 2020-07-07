@@ -16,11 +16,11 @@
 import os
 import matplotlib.pyplot as plt
 from extract import extract_values, extract_nodes, extract_sample_positions, extract_vectors, extract_topography, \
-    extract_sample_forward
+    extract_sample_forward, extract_sections
 from message import warning
 from pathutil import list_files, get_file
 from plotting import make_temperature_plot, make_isotherms, make_sample_positions, make_combined_temperature_position, \
-    make_combined_temperature_vector, make_topography, make_forward
+    make_combined_temperature_vector, make_topography, make_forward, make_section, make_dtdz
 
 
 def generate_visualization(cfg):
@@ -39,9 +39,15 @@ def generate_visualization(cfg):
         figsize = (w / 10, h / 10 * cfg.vertical_exaggeration)
 
     plt.figure(figsize=figsize)
-
+    print('config output: {}'.format(cfg.output_root))
     for count in counters:
         print('Time step: {}'.format(count))
+
+        sp = get_file(cfg, count, 'section')
+        if sp:
+            sxs, sys, sks = extract_sections(sp)
+            make_section(count, cfg, sxs, sys, sks)
+
         vp = get_file(cfg, count, 'values')
         hastemp = False
         if vp:
@@ -92,6 +98,11 @@ def generate_visualization(cfg):
         if tp:
             txs, tys = extract_topography(tp)
             make_topography(count, cfg, txs, tys)
+            vp = get_file(cfg, count, 'values')
+            if vp:
+                vs = extract_values(vp)
+                make_dtdz(count, cfg, txs, tys, vs)
+                continue
         else:
             warning('No Topography data')
 

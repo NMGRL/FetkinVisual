@@ -18,7 +18,9 @@ import sys
 
 from config import Config
 from message import warning
+
 from visualization import generate_visualization
+from ch import coolhistory
 
 
 def welcome():
@@ -33,6 +35,9 @@ Developed by Jake Ross, Brandon Lutz. NMT 2019
 ''')
 
 
+COMMANDS = {'plot': generate_visualization,
+            'ch': coolhistory}
+
 def main():
     DEBUG = int(os.getenv('DEBUG', 0))
     config = Config()
@@ -42,6 +47,7 @@ def main():
     else:
         import argparse
         parser = argparse.ArgumentParser()
+        parser.add_argument('command')
         parser.add_argument('root', metavar='root')
         parser.add_argument('config', metavar='config')
         args = parser.parse_args()
@@ -52,7 +58,7 @@ def main():
         root = os.getcwd()
         print('Using directory={}'.format(root))
         if DEBUG:
-            root = os.path.join(root, 'data', 'MuscAr_grad27')
+            root = os.path.join(root, 'data', 'Zhe_40_prop1')
 
     config.root = root
     if DEBUG:
@@ -90,7 +96,10 @@ def main():
     if not os.path.isdir(config.output_root):
         os.mkdir(config.output_root)
 
-    generate_visualization(config)
+    try:
+        COMMANDS[args.command](config)
+    except KeyError:
+        warning('invalid command={}. valid COMMANDS={}'.format(args.command, COMMANDS.keys()))
 
 
 if __name__ == '__main__':

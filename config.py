@@ -39,10 +39,16 @@ class Config(object):
     vertical_exaggeration = 1
     prefix = None
     label_isotherms = True
+    font_size = 14
+    base_elevation = -30
 
     def __init__(self):
         self.vector_map = {}
         self._dict = {}
+
+    @property
+    def fontdict(self):
+        return {'font.size': self.font_size}
 
     def load(self, path):
         if not os.path.isfile(path):

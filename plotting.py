@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ===============================================================================
+from itertools import groupby
+from operator import itemgetter
+import matplotlib.colors as colors
+import matplotlib.cm as cmx
 import matplotlib.pyplot as plt
 import os
 
@@ -21,9 +25,36 @@ from matplotlib.backends.backend_pdf import PdfPages
 from message import log
 
 
+def make_dtdz(count, cfg, xs, zs, ts):
+    log('making dt/dz plot')
+    plt.rcParams.update(cfg.fontdict)
+    plt.xlabel('X Distance Along Model Space (km)')
+    plt.ylabel('dt/dz')
+
+    dz = zs - cfg.base_elevation
+    dt = ts[:len(xs)] - ts[-len(xs):]
+    plt.plot(xs, dt / dz)
+
+    save(os.path.join(cfg.output_root, 'dtdz_{}.pdf'.format(count)))
+
+
+def make_section(count, cfg, xs, ys, ks):
+    log('making section plot')
+    plt.rcParams.update(cfg.fontdict)
+    plt.xlabel('X Distance Along Model Space (km)')
+    plt.ylabel('Elevation (km)')
+
+    for ki, data in groupby(zip(xs, ys, ks), key=itemgetter(2)):
+        xis, yis, kis = zip(*data)
+        # plt.fill_between(xis, yis)
+        plt.plot(xis, yis)
+
+    save(os.path.join(cfg.output_root, 'section_{}.pdf'.format(count)))
+
+
 def make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors):
     log('making temperature+vector')
-
+    plt.rcParams.update(cfg.fontdict)
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
 
@@ -38,7 +69,7 @@ def make_combined_temperature_vector(count, cfg, xs, ys, vs, vectors):
 
 def make_combined_temperature_position(count, cfg, xs, ys, vs, sxs, sys):
     log('making temperature+position')
-
+    plt.rcParams.update(cfg.fontdict)
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
 
@@ -53,6 +84,7 @@ def make_combined_temperature_position(count, cfg, xs, ys, vs, sxs, sys):
 
 def make_forward(cfg, xs, ys):
     log('making forward')
+    plt.rcParams.update(cfg.fontdict)
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Age (Ma)')
     plt.title('Sample Forward')
@@ -63,7 +95,7 @@ def make_forward(cfg, xs, ys):
 
 def make_sample_positions(count, cfg, xs, ys):
     log('making sample positions')
-
+    plt.rcParams.update(cfg.fontdict)
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Sample Position')
@@ -75,7 +107,7 @@ def make_sample_positions(count, cfg, xs, ys):
 
 def make_topography(count, cfg, xs, ys):
     log('making topography')
-
+    plt.rcParams.update(cfg.fontdict)
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Topography')
@@ -85,7 +117,7 @@ def make_topography(count, cfg, xs, ys):
 
 def make_isotherms(count, cfg, xs, ys, vs):
     log('making isotherms')
-
+    plt.rcParams.update(cfg.fontdict)
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Isotherms (C)')
@@ -98,6 +130,7 @@ def make_isotherms(count, cfg, xs, ys, vs):
 
 def make_temperature_plot(count, cfg, xs, ys, vs):
     log('making temperature')
+    plt.rcParams.update(cfg.fontdict)
     plt.xlabel('X Distance Along Model Space (km)')
     plt.ylabel('Elevation (km)')
     plt.title('Temperature (C)')
@@ -111,6 +144,28 @@ def add_colorbar(cfg):
     bar.mappable.set_clim(cfg.colormap_min, cfg.colormap_max)
     bar.ax.invert_yaxis()
     bar.set_label('Temperature (C)')
+
+
+def make_coolhistory(config, tis, tes, color, label):
+    plt.plot(tis, tes, color=color, label=label)
+
+
+def format_coolhistory(config):
+    plt.xlabel('Time (Ma)')
+    plt.ylabel('Temperature (C)')
+    plt.title(config.ch['title'])
+    plt.legend(loc=config.ch['legend_location'])
+
+
+def make_line_color_mapper(cmap, start, end):
+    jet = cm = plt.get_cmap(cmap)
+    cNorm = colors.Normalize(vmin=start, vmax=end)
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+
+    def func(v):
+        return scalarMap.to_rgba(v)
+
+    return func
 
 
 def save(opath):

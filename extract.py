@@ -61,6 +61,24 @@ def extract_sample_forward(fp):
     return extract_xy(fp, idxs=[0, 1])
 
 
+def extract_sections(fp):
+    delimiter = ' '
+    xs, ys, ks = [], [], []
+
+    with open(fp, 'r') as rfile:
+        for line in rfile:
+            line = line.strip()
+            args = line.split(delimiter)
+            args = [a for a in args if a != '']
+            if args:
+                if '_o_' not in args[2]:
+                    xs.append(float(args[0]))
+                    ys.append(float(args[1]))
+                    ks.append(args[2])
+
+    return xs, ys, ks
+
+
 def extract_vectors(vp, cfg):
     vectors = []
     with open(vp, 'r') as rfile:
