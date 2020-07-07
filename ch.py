@@ -38,7 +38,7 @@ def coolhistory(config):
     start, end = r.split('-')
     start, end = int(start), int(end)
 
-    func = make_line_color_mapper(config.ch['colormap'], start, end)
+    func = make_line_color_mapper(config.ch.get('colormap', 'RdYlBu'), start, end)
 
     for i in range(start, end + 1):
         name = '{}_tt_{}_auto_name_{}.txt'.format(config.prefix, config.ch['tag'], i)
@@ -47,5 +47,13 @@ def coolhistory(config):
         make_coolhistory(config, tis, tes, func(i), i)
 
     format_coolhistory(config)
-    save(os.path.join(config.output_root, 'ch.pdf'))
+
+    i = 0
+    while 1:
+        p = os.path.join(config.output_root, 'ch{:05d}.pdf'.format(i))
+        if not os.path.isfile(p):
+            break
+        i += 1
+
+    save(p)
 # ============= EOF =============================================
