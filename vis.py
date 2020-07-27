@@ -17,6 +17,7 @@ import os
 import sys
 
 from config import Config
+from dtdz import dtdz
 from message import warning
 
 from visualization import generate_visualization
@@ -36,7 +37,8 @@ Developed by Jake Ross, Brandon Lutz. NMT 2019
 
 
 COMMANDS = {'plot': generate_visualization,
-            'ch': coolhistory}
+            'ch': coolhistory,
+            'dtdz': dtdz}
 
 def main():
     DEBUG = int(os.getenv('DEBUG', 0))
@@ -101,6 +103,7 @@ def main():
     except KeyError as e:
         warning('invalid command={}. valid COMMANDS={}'.format(args.command, COMMANDS.keys()))
         warning(e)
+
 
 if __name__ == '__main__':
     main()
